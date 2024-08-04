@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pneumonia Detection</title>
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('/static/background.jpg');
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            background-size: cover;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            display: none; /* Hide the default file input */
+        }
+
+        .choose-file-button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            text-align: center;
+            width: 200px; /* Set the width of the button */
+        }
+
+        .choose-file-button:hover {
+            background-color: #0056b3;
+        }
+
+        .analyze-button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            text-align: center;
+            width: 200px; /* Set the width of the button */
+        }
+
+        .analyze-button:hover {
+            background-color: #218838;
+        }
+
+        #image-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #uploaded-image {
+            max-width: 400px;
+            max-height: 400px;
+            margin: 0 auto;
+            display: none; /* Initially hide the uploaded image */
+            border: 2px solid #333;
+            padding: 10px;
+        }
+
+        #prediction {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .healthy {
+            color: green;
+        }
+
+        .pneumonia {
+            color: red;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="animate__animated animate__bounce">Pneumonia Detection</h1>
+        <div id="image-container">
+            <img id="uploaded-image" src="" alt="Uploaded Image">
+        </div>
+        <form id="prediction-form" enctype="multipart/form-data">
+            <label for="file" class="choose-file-button animate__animated animate__fadeInUp">Choose File</label>
+            <input type="file" id="file" name="file" accept="image/*" onchange="previewImage(event)">
+            <button type="submit" class="analyze-button animate__animated animate__fadeInUp">Analyze</button>
+        </form>
+        <div id="prediction"></div>
+        <div class="footer">Made by Abhinav Bansal and Sachin</div>
+    </div>
+    <script>
+        function previewImage(event) {
+            var input = event.target;
+            var reader = new FileReader();
+            reader.onload = function() {
+                var dataURL = reader.result;
+                var img = document.getElementById('uploaded-image');
+                img.src = dataURL;
+                img.style.display = 'block'; // Show the uploaded image
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        $('#prediction-form').submit(function(event) {
+            event.preventDefault();
+            var formData = new FormData($(this)[0]);
+
+            $.ajax({
+                url: '/predict',
+                type: 'POST',
+                data: formData,
+                async: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    var predictionText = 'Prediction: ' + response.prediction ;
+                    $('#prediction').text(predictionText);
+                    if (response.prediction === 'Healthy') {
+                        $('#prediction').removeClass('pneumonia').addClass('healthy');
+                    } else {
+                        $('#prediction').removeClass('healthy').addClass('pneumonia');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#prediction').text('Error: ' + xhr.responseJSON.error);
+                }
+            });
+
+            return false;
+        });
+    </script>
+</body>
+</html>
